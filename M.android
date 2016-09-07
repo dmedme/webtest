@@ -1,0 +1,54 @@
+# M.android
+# $Name$ $Id$
+#	SCCS ID: %W% %G%
+# Android
+# ***********************************************
+NDK=/opt/NVPACK/android-ndk-r7
+SYSROOT=$(NDK)/platforms/android-8/arch-arm
+CC=$(NDK)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$(SYSROOT)
+AND_CFLAGS=-march=armv7-a -mfloat-abi=softfp -DANDROID
+AND_LDFLAGS=-Wl,--fix-cortex-a8
+# ***********************************************
+INCS=-I. -I../e2common -I$(NDK)/../openssl-1.0.0f/include
+CFLAGS=$(AND_CFLAGS) $(AND_LDFLAGS) -g -DPOSIX -I. -DLINUX -DUNIX -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DNOBPF_H -DNOTCP_H -DNOETHER_H -DUSE_SSL $(INCS) -L$(NDK)/../openssl-1.0.0f
+VCC=$(CC)
+XPGCC=$(CC)
+##########################################################################
+# The compilation stuff
+##########################################################################
+LIBS=../e2common/comlib.a -lz -lm -lc
+LDFLAGS=$(AND_LDFLAGS) $(LIBS)
+CLIBS=$(LIBS)
+RANLIB = ar ts
+YACC=byacc
+LEX=flex -l
+# ************************************************************************
+.SUFFIXES: .c .o .y .s
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+.c.s:
+	$(CC) $(CFLAGS) -S $<
+.y.c:
+	bison -d $<
+	mv $*.tab.c $@
+	mv $*.tab.h $*.h
+.y.o:
+	bison -d $<
+	mv $*.tab.c $*.c
+	mv $*.tab.h $*.h
+	$(CC) $(CFLAGS) -c $*.c
+TARGET=minitest e2fifin e2fifout
+##########################################################################
+# The executables that are built
+##########################################################################
+# Makefile for web server utilities
+all: $(TARGET)
+	@echo All done
+clean:
+	rm -f *.o
+minitest: minitest.o webmenu.o 
+	$(CC) $(CFLAGS) -o minitest minitest.o webmenu.o $(CLIBS)
+e2fifin: e2fifin.c minitest.h
+	$(CC) $(CFLAGS) -o e2fifin e2fifin.c $(CLIBS)
+e2fifout: e2fifout.c minitest.h
+	$(CC) $(CFLAGS) -o e2fifout e2fifout.c $(CLIBS)

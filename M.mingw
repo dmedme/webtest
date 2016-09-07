@@ -1,0 +1,55 @@
+# M.mingw
+# $Name$ $Id$
+#	SCCS ID: %W% %G%
+##########################################################################
+# The compilation stuff
+##########################################################################
+INCS=-I. -I../e2common
+#CFLAGS=-DDEBUG -DPOSIX -g2 $(INCS) -DNT4 -DMINGW32 -DPATH_AT -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DNOBPF_H -DNOTCP_H -DNOETHER_H -D_WIN32 -DWIN32 -DNOIP_H -DNOIP_ICMP_H
+CFLAGS=-DPOSIX -O4 $(INCS) -DNT4 -DMINGW32 -DPATH_AT -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DNOBPF_H -DNOTCP_H -DNOETHER_H -D_WIN32 -DWIN32 -DNOIP_H -DNOIP_ICMP_H -s
+# ************************************************************************
+# This is an attempt to:
+# -   Add webserver functionality to minitest
+# -   Get webmenu working on Windows
+# -   Improve security somewhat
+# ************************************************************************
+.SUFFIXES: .c .o .y
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+.y.c:
+	bison -d $<
+	mv $*.tab.c $@
+	mv $*.tab.h cscalc.h
+.y.o:
+	bison -d $<
+	mv $*.tab.c $*.c
+	mv $*.tab.h cscalc.h
+	$(CC) $(CFLAGS) -c $*.c
+# ************************************************************************
+# Usual suspects
+#
+CC= c:/mingw/bin/gcc
+RC = c:/lcc/bin/lrc
+VCC= c:/mingw/bin/gcc
+XPGCC= c:/mingw/bin/gcc
+RANLIB = c:/mingw/bin/ranlib
+AR = c:/mingw/bin/ar
+LD= c:/mingw/bin/gcc
+YACC=bison
+LEX=flex -l
+# ************************************************************************
+CLIBS=../e2common/comlib.a -Lc:/mingw/lib -lmingw32 -lws2_32 -ladvapi32 -lgdi32 -luser32 -lshell32 -lkernel32 -lmsvcrt -lntdll
+##########################################################################
+# The executables that are built
+##########################################################################
+# Makefile for multi-threaded drivers 
+all: minitest e2fifin e2fifout
+	@echo All done
+clean:
+	rm -f *.o
+minitest: minitest.o webmenu.o 
+	$(CC) $(CFLAGS) -o minitest minitest.o webmenu.o $(CLIBS)
+e2fifin: e2fifin.c minitest.h
+	$(CC) $(CFLAGS) -o e2fifin e2fifin.c $(CLIBS)
+e2fifout: e2fifout.c minitest.h
+	$(CC) $(CFLAGS) -o e2fifout e2fifout.c $(CLIBS)

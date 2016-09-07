@@ -1,0 +1,54 @@
+# M.mingw
+# $Name$ $Id$
+#	SCCS ID: %W% %G%
+##########################################################################
+# The compilation stuff
+##########################################################################
+INCS=-I. -I../e2common
+CFLAGS=-DPOSIX -DLINUX -O4 -s $(INCS) -DUNIX -DPATH_AT -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DNOBPF_H -DNOTCP_H -DNOETHER_H
+#CFLAGS=-DPOSIX -DLINUX -O4 $(INCS) -DUNIX -DPATH_AT -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DNOBPF_H -DNOTCP_H -DNOETHER_H
+# ************************************************************************
+# This is an attempt to:
+# -   Add webserver functionality to minitest
+# -   Get webmenu working on Windows
+# -   Improve security somewhat
+# ************************************************************************
+.SUFFIXES: .c .o .y
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+.y.c:
+	bison -d $<
+	mv $*.tab.c $@
+	mv $*.tab.h cscalc.h
+.y.o:
+	bison -d $<
+	mv $*.tab.c $*.c
+	mv $*.tab.h cscalc.h
+	$(CC) $(CFLAGS) -c $*.c
+# ************************************************************************
+# Usual suspects
+#
+CC= gcc
+VCC= gcc
+XPGCC= gcc
+RANLIB = ranlib
+AR = ar
+LD= gcc
+YACC=bison
+LEX=flex -l
+# ************************************************************************
+CLIBS=../e2common/comlib.a -lm -lpthread
+##########################################################################
+# The executables that are built
+##########################################################################
+# Makefile for multi-threaded drivers 
+all: minitest e2fifin e2fifout
+	@echo All done
+clean:
+	rm -f *.o
+minitest: minitest.o webmenu.o 
+	$(CC) $(CFLAGS) -o minitest minitest.o webmenu.o $(CLIBS)
+e2fifin: e2fifin.c minitest.h
+	$(CC) $(CFLAGS) -o e2fifin e2fifin.c $(CLIBS)
+e2fifout: e2fifout.c minitest.h
+	$(CC) $(CFLAGS) -o e2fifout e2fifout.c $(CLIBS)
